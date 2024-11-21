@@ -1,48 +1,39 @@
 import { MongoClient } from 'mongodb';
 
-
+const DB_HOST = process.env.DB_HOST || 'localhost';
+const DB_PORT = process.env.DB_PORT || 27017;
+const DB_DATABASE = process.env.DB_DATABASE || 'files_manager';
+const url = `mongodb://${DB_HOST}:${DB_PORT}`;
 
 class DBClient {
   constructor() {
-    const host = process.env.DB_HOST || 'localhost';
-    const port = process.env.DB_PORT || 27017;
-    const database = process.env.DB_DATABASE || 'files_manager';
-
-    const uri = `mongodb://${host}:${port}`;
-    this.client = new MongoClient(uri);
-    this.db = null;
-
-    // Initialize connection
-    this.connect(database);
-  }
-
-  async connect(database) {
-    try {
-      await this.client.connect();
-      this.db = this.client.db(database);
-      console.log('Connected to MongoDB');
-    } catch (err) {
-      console.error('Error connecting to MongoDB:', err);
-    }
+    MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {
+      if (!error) {
+        this.db = client.db(DB_DATABASE);
+        this.users = this.db.collection('users');
+        this.files = this.db.collection('files');
+      } else {
+        console.log(error.message);
+        this.db = false;
+      }
+    });
   }
 
   isAlive() {
-    // Return true if the client is connected and the database is initialized
-    return this.client && this.client.topology && this.client.topology.isConnected();
+    return !!this.db;
   }
 
   async nbUsers() {
-    if (!this.db) return 0;
-    const usersCollection = this.db.collection('users');
-    return usersCollection.countDocuments();
+    const userCount = this.users.countDocuments();
+    return userCount;
   }
 
   async nbFiles() {
-    if (!this.db) return 0;
-    const filesCollection = this.db.collection('files');
-    return filesCollection.countDocuments();
+    const fileCount = this.files.countDocuments();
+    return fileCount;
   }
 }
 
 const dbClient = new DBClient();
+
 export default dbClient;
