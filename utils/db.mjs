@@ -1,9 +1,17 @@
-import pkg from 'mongodb';
-const { MongoClient } = pkg;
+import { MongoClient } from 'mongodb';
 
 class DBClient {
   constructor() {
-    this.client = new MongoClient(`mongodb://${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 27017}`);
+    // Get values from environment variables with default fallback
+    this.host = process.env.DB_HOST || 'localhost';
+    this.port = process.env.DB_PORT || 27017;
+    this.database = process.env.DB_DATABASE || 'files_manager';
+    
+    // MongoDB URI format
+    const uri = `mongodb://${this.host}:${this.port}`;
+    this.client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    
+    // Database reference
     this.db = null;
   }
 
@@ -11,47 +19,55 @@ class DBClient {
   async connect() {
     try {
       await this.client.connect();
-      this.db = this.client.db(process.env.DB_DATABASE || 'files_manager');
-      console.log("MongoDB connected");
+      this.db = this.client.db(this.database);
       return true;
-    } catch (error) {
-      console.error('Error connecting to MongoDB:', error);
+    } catch (err) {
+      console.error('Failed to connect to MongoDB:', err);
       return false;
     }
   }
 
-  // Check if MongoDB connection is alive
+  // Check if the MongoDB connection is alive
   async isAlive() {
-    if (this.db === null) {
-      return false; // DB is not initialized
-    }
-
     try {
-      await this.db.command({ ping: 1 });  // Ping the database to check if it's alive
+      // Ping MongoDB to check connection status
+      if (!this.db) {
+        // If DB isn't connected, attempt to connect first
+        await this.connect();
+      }
+      await this.db.command({ ping: 1 });
       return true;
-    } catch (error) {
-      console.error('Error pinging MongoDB:', error);
+    } catch (err) {
+      console.error('MongoDB is not alive:', err);
       return false;
     }
   }
 
-  // Get number of users
+  // Get the number of users in the users collection
   async nbUsers() {
-    if (await this.isAlive()) {
-      return await this.db.collection('users').countDocuments();
+    try {
+      const usersCollection = this.db.collection('users');
+      const count = await usersCollection.countDocuments();
+      return count;
+    } catch (err) {
+      console.error('Failed to get user count:', err);
+      return 0;
     }
-    throw new Error('MongoDB not connected');
   }
 
-  // Get number of files
+  // Get the number of files in the files collection
   async nbFiles() {
-    if (await this.isAlive()) {
-      return await this.db.collection('files').countDocuments();
+    try {
+      const filesCollection = this.db.collection('files');
+      const count = await filesCollection.countDocuments();
+      return count;
+    } catch (err) {
+      console.error('Failed to get file count:', err);
+      return 0;
     }
-    throw new Error('MongoDB not connected');
   }
 }
 
-// Create and export an instance of DBClient
+// Exporting a single instance of DBClient
 const dbClient = new DBClient();
 export default dbClient;
