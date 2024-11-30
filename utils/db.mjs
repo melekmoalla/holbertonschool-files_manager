@@ -1,5 +1,4 @@
-import pkg from 'mongodb';
-const { MongoClient } = pkg;
+import { MongoClient } from 'mongodb';
 
 class DBClient {
   constructor() {
@@ -11,6 +10,7 @@ class DBClient {
     this.db = null;
   }
 
+  // Connect to MongoDB
   async connect() {
     try {
       await this.client.connect();
@@ -22,16 +22,15 @@ class DBClient {
     }
   }
 
-  // Properly handle isAlive check
+  // Check if the database is alive
   async isAlive() {
     if (!this.db) {
       const connectionSuccess = await this.connect();
-      if (!connectionSuccess) return false;
+      if (!connectionSuccess) return false; // if the connection fails, return false
     }
 
     try {
-      // Ping the MongoDB server
-      await this.db.command({ ping: 1 });
+      await this.db.command({ ping: 1 }); // Ping MongoDB server to check if it's alive
       return true;
     } catch (err) {
       console.error('MongoDB is not alive:', err);
@@ -39,7 +38,7 @@ class DBClient {
     }
   }
 
-  // Get number of users
+  // Get the number of users
   async nbUsers() {
     try {
       const usersCollection = this.db.collection('users');
@@ -51,7 +50,7 @@ class DBClient {
     }
   }
 
-  // Get number of files
+  // Get the number of files
   async nbFiles() {
     try {
       const filesCollection = this.db.collection('files');
@@ -66,4 +65,3 @@ class DBClient {
 
 const dbClient = new DBClient();
 export default dbClient;
-
