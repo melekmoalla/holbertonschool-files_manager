@@ -15,6 +15,7 @@ class DBClient {
     try {
       await this.client.connect();
       this.db = this.client.db(this.database);
+      console.log('Connected to MongoDB');
       return true;
     } catch (err) {
       console.error('Failed to connect to MongoDB:', err);
@@ -26,15 +27,17 @@ class DBClient {
   async isAlive() {
     // If the database client is not initialized, attempt to connect
     if (this.db === null) {
+      console.log('MongoDB not initialized, attempting to connect...');
       const connectionSuccess = await this.connect();
       if (!connectionSuccess) {
         return false; // If the connection fails, return false
       }
     }
-  
+
     try {
       // Ping MongoDB server to check if it's alive
       await this.db.command({ ping: 1 });
+      console.log('MongoDB is alive');
       return true; // If no error occurs, MongoDB is alive
     } catch (error) {
       // If pinging fails, return false
@@ -42,10 +45,14 @@ class DBClient {
       return false;
     }
   }
-  
 
-  // Get number of users
+  // Get the number of users in the users collection
   async nbUsers() {
+    if (this.db === null) {
+      const connectionSuccess = await this.connect();
+      if (!connectionSuccess) return 0; // Return 0 if connection fails
+    }
+
     try {
       const usersCollection = this.db.collection('users');
       const count = await usersCollection.countDocuments();
@@ -56,8 +63,13 @@ class DBClient {
     }
   }
 
-  // Get number of files
+  // Get the number of files in the files collection
   async nbFiles() {
+    if (this.db === null) {
+      const connectionSuccess = await this.connect();
+      if (!connectionSuccess) return 0; // Return 0 if connection fails
+    }
+
     try {
       const filesCollection = this.db.collection('files');
       const count = await filesCollection.countDocuments();
@@ -69,6 +81,6 @@ class DBClient {
   }
 }
 
+// Singleton pattern to ensure only one instance of DBClient is created
 const dbClient = new DBClient();
 export default dbClient;
-
