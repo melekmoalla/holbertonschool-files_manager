@@ -1,22 +1,16 @@
 import pkg from 'mongodb';
-const { MongoClient } = pkg;  // Correct way to import MongoClient
+const { MongoClient } = pkg;
 
 class DBClient {
   constructor() {
-    // Get values from environment variables with default fallback
     this.host = process.env.DB_HOST || 'localhost';
     this.port = process.env.DB_PORT || 27017;
     this.database = process.env.DB_DATABASE || 'files_manager';
-    
-    // MongoDB URI format
     const uri = `mongodb://${this.host}:${this.port}`;
     this.client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-    
-    // Database reference
     this.db = null;
   }
 
-  // Connect to MongoDB
   async connect() {
     try {
       await this.client.connect();
@@ -28,14 +22,15 @@ class DBClient {
     }
   }
 
-  // Check if the MongoDB connection is alive
+  // Properly handle isAlive check
   async isAlive() {
+    if (!this.db) {
+      const connectionSuccess = await this.connect();
+      if (!connectionSuccess) return false;
+    }
+
     try {
-      // Ping MongoDB to check connection status
-      if (!this.db) {
-        // If DB isn't connected, attempt to connect first
-        await this.connect();
-      }
+      // Ping the MongoDB server
       await this.db.command({ ping: 1 });
       return true;
     } catch (err) {
@@ -44,7 +39,7 @@ class DBClient {
     }
   }
 
-  // Get the number of users in the users collection
+  // Get number of users
   async nbUsers() {
     try {
       const usersCollection = this.db.collection('users');
@@ -56,7 +51,7 @@ class DBClient {
     }
   }
 
-  // Get the number of files in the files collection
+  // Get number of files
   async nbFiles() {
     try {
       const filesCollection = this.db.collection('files');
@@ -69,6 +64,6 @@ class DBClient {
   }
 }
 
-// Exporting a single instance of DBClient
 const dbClient = new DBClient();
 export default dbClient;
+
