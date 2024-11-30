@@ -25,11 +25,9 @@ class DBClient {
 
   // Properly handle isAlive check
 
-  // Properly handle isAlive check
   async isAlive() {
     // If the database client is not initialized, attempt to connect
     if (this.db === null) {
-      console.log('MongoDB not initialized, attempting to connect...');
       const connectionSuccess = await this.connect();
       if (!connectionSuccess) {
         return false; // If the connection fails, return false immediately
@@ -39,7 +37,6 @@ class DBClient {
     try {
       // Ping MongoDB server to check if it's alive
       await this.db.command({ ping: 1 });
-      console.log('MongoDB is alive');
       return true; // If no error occurs, MongoDB is alive
     } catch (error) {
       // If pinging fails, return false
@@ -47,7 +44,6 @@ class DBClient {
       return false;
     }
   }
-
 
 
   // Get the number of users in the users collection
