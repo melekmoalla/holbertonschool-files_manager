@@ -23,30 +23,26 @@ class DBClient {
     }
   }
 
-  // Properly handle isAlive check
 
   async isAlive() {
-    // If the database client is not initialized, attempt to connect
     if (this.db === null) {
       const connectionSuccess = await this.connect();
       if (!connectionSuccess) {
-        return false; // If the connection fails, return false immediately
+        return false;
       }
     }
 
     try {
-      // Ping MongoDB server to check if it's alive
       await this.db.command({ ping: 1 });
-      return true; // If no error occurs, MongoDB is alive
+      return true;
     } catch (error) {
-      // If pinging fails, return false
+
       console.error('Error pinging MongoDB:', error);
       return false;
     }
   }
 
 
-  // Get the number of users in the users collection
   async nbUsers() {
     if (this.db === null) {
       const connectionSuccess = await this.connect();
@@ -63,7 +59,6 @@ class DBClient {
     }
   }
 
-  // Get the number of files in the files collection
   async nbFiles() {
     if (this.db === null) {
       const connectionSuccess = await this.connect();
@@ -81,6 +76,5 @@ class DBClient {
   }
 }
 
-// Singleton pattern to ensure only one instance of DBClient is created
 const dbClient = new DBClient();
 export default dbClient;
