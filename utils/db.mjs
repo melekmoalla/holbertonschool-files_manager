@@ -1,4 +1,5 @@
-import { MongoClient } from 'mongodb';
+import pkg from 'mongodb';
+const { MongoClient } = pkg;  // Correct way to import MongoClient
 
 class DBClient {
   constructor() {
