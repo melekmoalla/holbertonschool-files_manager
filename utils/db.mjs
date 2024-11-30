@@ -1,7 +1,6 @@
 import pkg from 'mongodb';
 const { MongoClient } = pkg;
 
-
 class DBClient {
   constructor() {
     this.client = new MongoClient(`mongodb://${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 27017}`);
@@ -13,6 +12,7 @@ class DBClient {
     try {
       await this.client.connect();
       this.db = this.client.db(process.env.DB_DATABASE || 'files_manager');
+      console.log("MongoDB connected");
       return true;
     } catch (error) {
       console.error('Error connecting to MongoDB:', error);
@@ -21,13 +21,23 @@ class DBClient {
   }
 
   // Check if MongoDB connection is alive
-  isAlive() {
-    return this.db !== null;
+  async isAlive() {
+    if (this.db === null) {
+      return false; // DB is not initialized
+    }
+
+    try {
+      await this.db.command({ ping: 1 });  // Ping the database to check if it's alive
+      return true;
+    } catch (error) {
+      console.error('Error pinging MongoDB:', error);
+      return false;
+    }
   }
 
   // Get number of users
   async nbUsers() {
-    if (this.isAlive()) {
+    if (await this.isAlive()) {
       return await this.db.collection('users').countDocuments();
     }
     throw new Error('MongoDB not connected');
@@ -35,7 +45,7 @@ class DBClient {
 
   // Get number of files
   async nbFiles() {
-    if (this.isAlive()) {
+    if (await this.isAlive()) {
       return await this.db.collection('files').countDocuments();
     }
     throw new Error('MongoDB not connected');
